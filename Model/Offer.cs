@@ -1,8 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Model
 {
+    /// <summary>
+    /// Represents order of sell/purchase of certain amount of shares at fixed max/min price per unit.
+    /// </summary>
     public class Order
     {
         public Guid OrderId { get; set; }

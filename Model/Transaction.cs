@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 
 namespace Model
 {
     /// <summary>
-    /// Represents a purchase and sale agreement between two parties
+    /// Represents a purchase and sale agreement between two parties.
     /// </summary>
     public class Transaction
     {
