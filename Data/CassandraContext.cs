@@ -30,6 +30,8 @@ namespace Data
             this.session = cluster.Connect(options.Keyspace);
             this.mapper = new Mapper(this.session);
             this.ConfigureCluster();
+
+            MappingConfiguration.Global.Define<CassandraMappings>();
         }
 
         public string GetCqlVersion()
@@ -145,6 +147,20 @@ namespace Data
             var transaction = Transaction.FromOrders(purchase, sale);
             batch.Insert(transaction);
             this.mapper.Execute(batch);
+        }
+
+        public IEnumerable<Transaction> FetchTransactions(string stockSymbol, DateTimeOffset minDate)
+        {
+            var query = Cql.New("SELECT * FROM transactions WHERE stockSymbol = ? AND date > ?", stockSymbol, minDate);
+            query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.One));
+            return this.mapper.Fetch<Transaction>(query);
+        }
+
+        public decimal GetAverageTransactionPrice(string stockSymbol, DateTimeOffset minDate)
+        {
+            var query = Cql.New("SELECT avg(pricePerUnit) FROM transactions WHERE stockSymbol = ? AND date > ?", stockSymbol, minDate);
+            query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.One));
+            return this.mapper.Single<decimal>(query);
         }
     }
 }

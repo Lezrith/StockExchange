@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Broker\BrokerLogic.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
   </ItemGroup>
 

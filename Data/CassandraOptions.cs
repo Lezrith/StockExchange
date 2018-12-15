@@ -5,7 +5,7 @@
         public CassandraOptions()
         {
             this.ContactPoints = new[] { "127.0.0.1" };
-            this.Keyspace = "";
+            this.Keyspace = "stock_exchange";
         }
 
         public string[] ContactPoints { get; set; }

@@ -18,12 +18,18 @@ namespace Model
 
         public int Quantity { get; set; }
 
-        public OrderType OrderType { get; set; }
+        public int OrderType { get; set; }
 
         public decimal PricePerUnit { get; set; }
 
         public DateTimeOffset Date { get; set; }
 
         public IEnumerable<Guid> LockedBy { get; set; }
+
+        public OrderType OrderTypeEnum
+        {
+            get => (OrderType)this.OrderType;
+            set => this.OrderType = (int)value;
+        }
     }
 }
