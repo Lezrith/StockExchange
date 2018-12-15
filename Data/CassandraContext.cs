@@ -1,6 +1,9 @@
-﻿using Cassandra;
+﻿using System;
+using System.Collections.Generic;
+using Cassandra;
 using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
+using Model;
 
 namespace Data
 {
@@ -60,6 +63,23 @@ namespace Data
                 "PricePerUnit decimal," +
                 "Date timestamp," +
                 "PRIMARY KEY (StockSymbol, Date));");
+        }
+
+        public void InsertOrder(Order order)
+        {
+            this.mapper.Insert(order, CqlQueryOptions.New().SetConsistencyLevel(ConsistencyLevel.Any));
+        }
+
+        public void InsertTransaction(Transaction transaction)
+        {
+            this.mapper.Insert(transaction, CqlQueryOptions.New().SetConsistencyLevel(ConsistencyLevel.Any));
+        }
+
+        public IEnumerable<Order> FetchOrders(string stockSymbol, OrderType orderType)
+        {
+            var query = Cql.New("SELECT * FROM orders WHERE stockSymbol = ? AND orderType = orderType", stockSymbol, orderType);
+            query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.One));
+            return this.mapper.Fetch<Order>(query);
         }
     }
 }
