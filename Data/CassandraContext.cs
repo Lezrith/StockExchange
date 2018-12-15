@@ -48,7 +48,7 @@ namespace Data
                 "PricePerUnit decimal," +
                 "Date timestamp," +
                 "LockedBy set<uuid>," +
-                "PRIMARY KEY (StockSymbol, OrderType));");
+                "PRIMARY KEY ((StockSymbol, OrderType)));");
             var transactionCreate = this.session.Execute("CREATE TABLE IF NOT EXISTS stock_exchange.transactions (" +
                 "TransactionId uuid," +
                 "StockSymbol text," +
@@ -59,7 +59,7 @@ namespace Data
                 "Quantity int," +
                 "PricePerUnit decimal," +
                 "Date timestamp," +
-                "PRIMARY KEY ((StockSymbol), Date));");
+                "PRIMARY KEY (StockSymbol, Date));");
         }
     }
 }
