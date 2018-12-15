@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cassandra;
 using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
@@ -70,6 +71,11 @@ namespace Data
             this.mapper.Insert(order, CqlQueryOptions.New().SetConsistencyLevel(ConsistencyLevel.Any));
         }
 
+        public void RemoveOrder(Order order)
+        {
+            this.mapper.Delete(order);
+        }
+
         public void InsertTransaction(Transaction transaction)
         {
             this.mapper.Insert(transaction, CqlQueryOptions.New().SetConsistencyLevel(ConsistencyLevel.Any));
@@ -77,9 +83,68 @@ namespace Data
 
         public IEnumerable<Order> FetchOrders(string stockSymbol, OrderType orderType)
         {
-            var query = Cql.New("SELECT * FROM orders WHERE stockSymbol = ? AND orderType = orderType", stockSymbol, orderType);
+            var query = Cql.New("SELECT * FROM orders WHERE StockSymbol = ? AND OrderType = ?", stockSymbol, orderType);
             query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.One));
             return this.mapper.Fetch<Order>(query);
+        }
+
+        public void LockOrders(IEnumerable<Order> orders, Guid matcherId)
+        {
+            var statement = this.session.Prepare(
+                "UPDATE orders SET LockedBy = LockedBy + {?} WHERE StockSymbol = ? AND OrderType = ? AND OrderId = ?");
+            statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
+            foreach (var order in orders)
+            {
+                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderType, order.OrderId));
+            }
+        }
+
+        public void UnlockOrders(IEnumerable<Order> orders, Guid matcherId)
+        {
+            var statement = this.session.Prepare(
+                "UPDATE orders SET LockedBy = LockedBy - {?} WHERE StockSymbol = ? AND OrderType = ? AND OrderId = ?");
+            statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
+            foreach (var order in orders)
+            {
+                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderType, order.OrderId));
+            }
+        }
+
+        public bool HaveLock(IEnumerable<Order> orders, Guid matcherId)
+        {
+            return orders.All(order =>
+            {
+                var query = Cql.New(
+                    "SELECT LockedBy FROM orders WHERE StockSymbol = ? AND OrderType = ? AND OrderId = ?",
+                    matcherId,
+                    order.StockSymbol,
+                    order.OrderId);
+                query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.Quorum));
+                return this.mapper.Single<IEnumerable<Guid>>(query).Contains(matcherId);
+            });
+        }
+
+        public void MakeTransaction(Order purchase, Order sale)
+        {
+            var batch = this.mapper.CreateBatch();
+            batch.Delete(purchase);
+            batch.Delete(sale);
+            var difference = sale.Quantity - purchase.Quantity;
+            if (difference < 0)
+            {
+                purchase.OrderId = new Guid();
+                purchase.Quantity = -difference;
+                batch.Insert(purchase);
+            }
+            else if (difference > 0)
+            {
+                sale.OrderId = new Guid();
+                sale.Quantity = difference;
+                batch.Insert(sale);
+            }
+            var transaction = Transaction.FromOrders(purchase, sale);
+            batch.Insert(transaction);
+            this.mapper.Execute(batch);
         }
     }
 }
