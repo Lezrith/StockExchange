@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -35,6 +36,7 @@ namespace ConsoleInterface
                     logging.AddDebug();
                 })
                 .AddSingleton(configuration)
+                .AddSingleton<CassandraContext>()
                 .AddSingleton<IApplication, Application>()
                 .BuildServiceProvider();
         }
