@@ -45,7 +45,7 @@ namespace Logic
                         var notUnique = uniquePurchaseOrders.Where(p => p.Count() > 1).Union(uniqueSaleOrders.Where(p => p.Count() > 1))
                             .SelectMany(t => t.Select(t2 => t2.TransactionId))
                             .ToList();
-                        var message = notUnique.Aggregate("", (acc, id) => $"{acc}, {id.ToString()}");
+                        var message = String.Join(", ", notUnique.Select(p => p.ToString()));
                         if (notUnique.Count > 0)
                         {
                             this.logger.LogInformation($"Potentially erroneous transactions are: {message}");
