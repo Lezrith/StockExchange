@@ -31,7 +31,7 @@ namespace Logic.Broker
             this.tasks = new Task[numberOfThreads];
             for (var i = 0; i < numberOfThreads; i++)
             {
-                var matcher = new Broker(this.companies, this.context, this.name, this.period);
+                var matcher = new Broker(this.companies, this.context, $"{this.name}{i}", this.period);
                 this.tasks[i] = Task.Factory.StartNew(matcher.Run);
             }
         }

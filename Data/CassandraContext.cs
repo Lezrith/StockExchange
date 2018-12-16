@@ -119,7 +119,7 @@ namespace Data
             }
         }
 
-        public bool HaveLock(IEnumerable<Order> orders, Guid matcherId)
+        public bool HasExclusiveLock(IEnumerable<Order> orders, Guid matcherId)
         {
             return orders.All(order =>
             {
@@ -128,7 +128,8 @@ namespace Data
                     order.StockSymbol,
                     order.OrderId);
                 query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.Quorum));
-                return this.mapper.Single<IEnumerable<Guid>>(query).Contains(matcherId);
+                var set = this.mapper.Single<IEnumerable<Guid>>(query);
+                return set.Contains(matcherId) && set.Count() == 1;
             });
         }
 
@@ -142,12 +143,14 @@ namespace Data
             {
                 purchase.OrderId = Guid.NewGuid();
                 purchase.Quantity = -difference;
+                purchase.LockedBy = null;
                 batch.Insert(purchase);
             }
             else if (difference > 0)
             {
                 sale.OrderId = Guid.NewGuid();
                 sale.Quantity = difference;
+                sale.LockedBy = null;
                 batch.Insert(sale);
             }
             var transaction = Transaction.FromOrders(purchase, sale);

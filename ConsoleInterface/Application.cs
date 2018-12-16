@@ -29,7 +29,7 @@ namespace ConsoleInterface
             var numberOfMatchers = this.configuration.GetSection("Logic:NumberOfMatchers").Get<int>();
 
             var matcherManager = new MatcherManager(companies, this.context, TimeSpan.FromSeconds(1));
-            var brokerManager = new BrokerManager(companies, this.context, "krzysztof", TimeSpan.FromSeconds(2));
+            var brokerManager = new BrokerManager(companies, this.context, "broker", TimeSpan.FromSeconds(2));
 
             matcherManager.Start(numberOfMatchers);
             brokerManager.Start(numberOfBrokers);
