@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Data;
 using Logic.Broker;
 using Logic.Matcher;
@@ -23,14 +24,15 @@ namespace ConsoleInterface
 
         public void Run()
         {
-            this.logger.LogDebug($"hello from cql version {this.context.GetCqlVersion()}");
+            var companies = this.configuration.GetSection("Logic:Companies").Get<IEnumerable<string>>().ToList();
+            var numberOfBrokers = this.configuration.GetSection("Logic:NumberOfBrokers").Get<int>();
+            var numberOfMatchers = this.configuration.GetSection("Logic:NumberOfMatchers").Get<int>();
 
-            var companies = new List<string> { "Apple", "Intel", "Microsoft" }; // TODO extract it from the configuration file
             var matcherManager = new MatcherManager(companies, this.context, TimeSpan.FromSeconds(1));
             var brokerManager = new BrokerManager(companies, this.context, "krzysztof", TimeSpan.FromSeconds(2));
 
-            matcherManager.Start(1);
-            brokerManager.Start(1);
+            matcherManager.Start(numberOfMatchers);
+            brokerManager.Start(numberOfBrokers);
             matcherManager.Wait();
             brokerManager.Wait();
         }
