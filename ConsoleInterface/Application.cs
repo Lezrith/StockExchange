@@ -33,8 +33,8 @@ namespace ConsoleInterface
 
             matcherManager.Start(this.options.NumberOfMatchers);
             brokerManager.Start(this.options.NumberOfBrokers);
-
-            this.logger.LogDebug($"cql version {this.context.GetCqlVersion()}; app started");
+            
+            this.logger.LogInformation($"cql version {this.context.GetCqlVersion()}; app started");
 
             matcherManager.Wait();
             brokerManager.Wait();
