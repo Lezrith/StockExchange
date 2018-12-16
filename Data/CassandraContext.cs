@@ -61,7 +61,7 @@ namespace Data
                 "StockSymbol text," +
                 "BuyerId uuid," +
                 "BuyerName text," +
-                "SelledId uuid," +
+                "SellerId uuid," +
                 "SellerName text," +
                 "Quantity int," +
                 "PricePerUnit decimal," +
@@ -93,23 +93,27 @@ namespace Data
 
         public void LockOrders(IEnumerable<Order> orders, Guid matcherId)
         {
-            var statement = this.session.Prepare(
-                "UPDATE orders SET LockedBy = LockedBy + {?} WHERE StockSymbol = ? AND OrderId = ?");
-            statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
             foreach (var order in orders)
             {
-                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderId));
+                var statement = new SimpleStatement(
+                    $"UPDATE orders SET LockedBy = LockedBy + {{{matcherId}}} WHERE StockSymbol = ? AND OrderId = ?",
+                    order.StockSymbol,
+                    order.OrderId);
+                statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
+                this.session.Execute(statement);
             }
         }
 
         public void UnlockOrders(IEnumerable<Order> orders, Guid matcherId)
         {
-            var statement = this.session.Prepare(
-                "UPDATE orders SET LockedBy = LockedBy - {?} WHERE StockSymbol = ? AND OrderId = ?");
-            statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
             foreach (var order in orders)
             {
-                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderId));
+                var statement = new SimpleStatement(
+                    $"UPDATE orders SET LockedBy = LockedBy - {{{matcherId}}} WHERE StockSymbol = ? AND OrderId = ?",
+                    order.StockSymbol,
+                    order.OrderId);
+                statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
+                this.session.Execute(statement);
             }
         }
 

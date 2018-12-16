@@ -15,13 +15,13 @@ namespace MatcherLogic
         private readonly TimeSpan period;
         private readonly Guid matcherId;
 
-        public Matcher(IList<string> companies, CassandraContext context, Random rng, TimeSpan period)
+        public Matcher(ICollection<string> companies, CassandraContext context, Random rng, TimeSpan period)
         {
-            this.companies = companies ?? throw new ArgumentNullException(nameof(companies));
+            this.companies = companies.ToList() ?? throw new ArgumentNullException(nameof(companies));
             this.context = context ?? throw new ArgumentNullException(nameof(context));
             this.rng = rng ?? throw new ArgumentNullException(nameof(rng));
             this.period = period;
-            this.matcherId = new Guid();
+            this.matcherId = Guid.NewGuid();
         }
 
         public void Run()
@@ -42,15 +42,18 @@ namespace MatcherLogic
             var (sale, purchase) = sales
                 .Join(purchases, s => s, p => p, (s, p) => (s, p), new OrderMatchComparer())
                 .FirstOrDefault();
-            var toLock = new List<Order> { sale, purchase };
-            this.context.LockOrders(toLock, this.matcherId);
-            if (this.context.HaveLock(toLock, this.matcherId))
+            if (sale != null && purchase != null)
             {
-                this.context.MakeTransaction(purchase, sale);
-            }
-            else
-            {
-                this.context.UnlockOrders(toLock, this.matcherId);
+                var toLock = new List<Order> { sale, purchase };
+                this.context.LockOrders(toLock, this.matcherId);
+                if (this.context.HaveLock(toLock, this.matcherId))
+                {
+                    this.context.MakeTransaction(purchase, sale);
+                }
+                else
+                {
+                    this.context.UnlockOrders(toLock, this.matcherId);
+                }
             }
         }
 
@@ -70,7 +73,7 @@ namespace MatcherLogic
 
             public int GetHashCode(Order obj)
             {
-                return obj.OrderId.GetHashCode();
+                return 0;
             }
         }
     }

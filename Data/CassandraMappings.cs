@@ -13,11 +13,15 @@ namespace Data
             this.For<Order>()
                 .TableName("orders")
                 .KeyspaceName("stock_exchange")
+                .PartitionKey("stockSymbol")
+                .ClusteringKey("orderId")
                 .Column(o => o.OrderType, cm => cm.WithDbType<int>());
 
             this.For<Transaction>()
                 .KeyspaceName("stock_exchange")
-                .TableName("transactions");
+                .TableName("transactions")
+                .PartitionKey("stockSymbol")
+                .ClusteringKey("date");
         }
     }
 }
