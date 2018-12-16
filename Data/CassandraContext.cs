@@ -138,13 +138,13 @@ namespace Data
             var difference = sale.Quantity - purchase.Quantity;
             if (difference < 0)
             {
-                purchase.OrderId = new Guid();
+                purchase.OrderId = Guid.NewGuid();
                 purchase.Quantity = -difference;
                 batch.Insert(purchase);
             }
             else if (difference > 0)
             {
-                sale.OrderId = new Guid();
+                sale.OrderId = Guid.NewGuid();
                 sale.Quantity = difference;
                 batch.Insert(sale);
             }

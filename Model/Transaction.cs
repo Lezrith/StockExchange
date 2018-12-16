@@ -32,7 +32,7 @@ namespace Model
                 SellerId = sale.SubmitterId,
                 SellerName = sale.SubmitterName,
                 StockSymbol = purchase.StockSymbol,
-                TransactionId = new Guid(),
+                TransactionId = Guid.NewGuid(),
             };
         }
 
