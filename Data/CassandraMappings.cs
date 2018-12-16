@@ -13,8 +13,8 @@ namespace Data
             this.For<Order>()
                 .TableName("orders")
                 .KeyspaceName("stock_exchange")
-                .Column(o => o.OrderTypeEnum, cm => cm.Ignore());
-            
+                .Column(o => o.OrderType, cm => cm.WithDbType<int>());
+
             this.For<Transaction>()
                 .KeyspaceName("stock_exchange")
                 .TableName("transactions");

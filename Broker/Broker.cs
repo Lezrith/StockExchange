@@ -62,7 +62,7 @@ namespace BrokerLogic
                 SubmitterId = myId,
                 SubmitterName = Name,
                 Quantity = myQuantity,
-                OrderTypeEnum = orderType,
+                OrderType = orderType,
                 PricePerUnit = (decimal)myPrice,
                 Date = DateTimeOffset.Now,
                 LockedBy = null,
