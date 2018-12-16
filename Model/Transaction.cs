@@ -7,7 +7,7 @@ namespace Model
     /// </summary>
     public class Transaction
     {
-        public static Transaction FromOrders(Order purchase, Order sale)
+        public static Transaction FromOrders(Order purchase, Order sale, Guid matcherId)
         {
             if (purchase.StockSymbol != sale.StockSymbol)
             {
@@ -35,6 +35,7 @@ namespace Model
                 TransactionId = Guid.NewGuid(),
                 PurchaseOrderId = purchase.OrderId,
                 SaleOrderId = sale.OrderId,
+                MatcherId = matcherId,
             };
         }
 
@@ -59,5 +60,7 @@ namespace Model
         public Guid PurchaseOrderId { get; set; }
 
         public Guid SaleOrderId { get; set; }
+
+        public Guid MatcherId { get; set; }
     }
 }

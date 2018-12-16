@@ -68,6 +68,7 @@ namespace Data
                 "Date timestamp," +
                 "PurchaseOrderId uuid," +
                 "SaleOrderId uuid," +
+                "MatcherId uuid," +
                 "PRIMARY KEY (StockSymbol, Date));");
         }
 
@@ -133,7 +134,7 @@ namespace Data
             });
         }
 
-        public void MakeTransaction(Order purchase, Order sale)
+        public void MakeTransaction(Order purchase, Order sale, Guid matcherId)
         {
             var batch = this.mapper.CreateBatch();
             batch.Delete(purchase);
@@ -153,7 +154,7 @@ namespace Data
                 sale.LockedBy = null;
                 batch.Insert(sale);
             }
-            var transaction = Transaction.FromOrders(purchase, sale);
+            var transaction = Transaction.FromOrders(purchase, sale, matcherId);
             batch.Insert(transaction);
             this.mapper.Execute(batch);
         }

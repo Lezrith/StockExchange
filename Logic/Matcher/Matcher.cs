@@ -48,7 +48,7 @@ namespace Logic.Matcher
                 this.context.LockOrders(toLock, this.matcherId);
                 if (this.context.HasExclusiveLock(toLock, this.matcherId))
                 {
-                    this.context.MakeTransaction(purchase, sale);
+                    this.context.MakeTransaction(purchase, sale, this.matcherId);
                 }
                 else
                 {
