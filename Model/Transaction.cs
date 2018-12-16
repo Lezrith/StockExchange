@@ -33,6 +33,8 @@ namespace Model
                 SellerName = sale.SubmitterName,
                 StockSymbol = purchase.StockSymbol,
                 TransactionId = Guid.NewGuid(),
+                PurchaseOrderId = purchase.OrderId,
+                SaleOrderId = sale.OrderId,
             };
         }
 
@@ -53,5 +55,9 @@ namespace Model
         public decimal PricePerUnit { get; set; }
 
         public DateTimeOffset Date { get; set; }
+
+        public Guid PurchaseOrderId { get; set; }
+
+        public Guid SaleOrderId { get; set; }
     }
 }

@@ -66,6 +66,8 @@ namespace Data
                 "Quantity int," +
                 "PricePerUnit decimal," +
                 "Date timestamp," +
+                "PurchaseOrderId uuid" +
+                "SaleOrderId uuid" +
                 "PRIMARY KEY (StockSymbol, Date));");
         }
 
