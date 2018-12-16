@@ -5,7 +5,7 @@ using System.Threading;
 using Data;
 using Model;
 
-namespace MatcherLogic
+namespace Logic.Matcher
 {
     public class Matcher
     {

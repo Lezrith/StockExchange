@@ -6,7 +6,7 @@ using System.Threading;
 using Data;
 using Model;
 
-namespace BrokerLogic
+namespace Logic.Broker
 {
     public class Broker
     {
