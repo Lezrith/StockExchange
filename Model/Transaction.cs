@@ -13,11 +13,11 @@ namespace Model
             {
                 throw new ArgumentException($"Stock symbols for orders do not match: ${purchase.StockSymbol} and ${sale.StockSymbol}");
             }
-            if (purchase.OrderType != OrderType.Purchase)
+            if (purchase.OrderTypeEnum != OrderType.Purchase)
             {
                 throw new ArgumentException($"Purchase order has invalid type: ${purchase.OrderType}");
             }
-            if (sale.OrderType != OrderType.Sale)
+            if (sale.OrderTypeEnum != OrderType.Sale)
             {
                 throw new ArgumentException($"Sale order has invalid type: ${sale.OrderType}");
             }
