@@ -36,6 +36,8 @@ namespace ConsoleInterface
                     logging.AddDebug();
                 })
                 .AddSingleton(configuration)
+                .Configure<CassandraOptions>(configuration.GetSection("Cassandra"))
+                .Configure<ApplicationOptions>(configuration.GetSection("Application"))
                 .AddSingleton<CassandraContext>()
                 .AddSingleton<IApplication, Application>()
                 .BuildServiceProvider();

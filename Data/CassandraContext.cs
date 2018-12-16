@@ -4,6 +4,7 @@ using System.Linq;
 using Cassandra;
 using Cassandra.Mapping;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Model;
 
 namespace Data
@@ -12,25 +13,23 @@ namespace Data
     {
         private readonly ISession session;
         private readonly Mapper mapper;
+        private readonly CassandraOptions options;
 
         public static void AddLogger(ILoggerProvider logger)
         {
             Diagnostics.AddLoggerProvider(logger);
         }
 
-        public CassandraContext() : this(new CassandraOptions())
+        public CassandraContext(IOptions<CassandraOptions> options)
         {
-        }
-
-        public CassandraContext(CassandraOptions options)
-        {
+            this.options = options.Value ?? throw new ArgumentNullException(nameof(options));
             var cluster = Cluster.Builder()
-                .AddContactPoints(options.ContactPoints)
+                .AddContactPoints(this.options.ContactPoints)
                 .Build();
             this.session = cluster.Connect();
             this.mapper = new Mapper(this.session);
             this.ConfigureCluster();
-            this.session.ChangeKeyspace(options.Keyspace);
+            this.session.ChangeKeyspace(this.options.Keyspace);
 
             MappingConfiguration.Global.Define<CassandraMappings>();
         }
@@ -42,10 +41,11 @@ namespace Data
 
         private void ConfigureCluster()
         {
-            var keyspaceCreate = this.session.Execute("CREATE KEYSPACE IF NOT EXISTS stock_exchange " +
-                "WITH REPLICATION = { 'class': 'SimpleStrategy', 'replication_factor': 3 };");
-            var keyspaceUse = this.session.Execute("USE stock_exchange");
-            var orderCreate = this.session.Execute("CREATE TABLE IF NOT EXISTS stock_exchange.orders (" +
+            var keyspaceCreate = this.session.Execute($"CREATE KEYSPACE IF NOT EXISTS {this.options.Keyspace} " +
+                $"WITH REPLICATION = {{ 'class': '{this.options.ReplicationStrategy}'," +
+                $"'replication_factor': {this.options.ReplicationFactor} }};");
+            var keyspaceUse = this.session.Execute($"USE {this.options.Keyspace}");
+            var orderCreate = this.session.Execute("CREATE TABLE IF NOT EXISTS orders (" +
                 "OrderId uuid," +
                 "StockSymbol text," +
                 "SubmitterId uuid," +
@@ -56,7 +56,7 @@ namespace Data
                 "Date timestamp," +
                 "LockedBy set<uuid>," +
                 "PRIMARY KEY (StockSymbol, OrderId));");
-            var transactionCreate = this.session.Execute("CREATE TABLE IF NOT EXISTS stock_exchange.transactions (" +
+            var transactionCreate = this.session.Execute("CREATE TABLE IF NOT EXISTS transactions (" +
                 "TransactionId uuid," +
                 "StockSymbol text," +
                 "BuyerId uuid," +

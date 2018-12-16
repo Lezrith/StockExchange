@@ -6,33 +6,33 @@ using Logic.Broker;
 using Logic.Matcher;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ConsoleInterface
 {
     internal class Application : IApplication
     {
-        private readonly IConfigurationRoot configuration;
+        private readonly ApplicationOptions options;
         private readonly ILogger logger;
         private readonly CassandraContext context;
 
-        public Application(IConfigurationRoot configuration, ILogger<Application> logger, CassandraContext context)
+        public Application(IOptions<ApplicationOptions> options, ILogger<Application> logger, CassandraContext context)
         {
-            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            this.options = options.Value ?? throw new ArgumentNullException(nameof(options));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public void Run()
         {
-            var companies = this.configuration.GetSection("Logic:Companies").Get<IEnumerable<string>>().ToList();
-            var numberOfBrokers = this.configuration.GetSection("Logic:NumberOfBrokers").Get<int>();
-            var numberOfMatchers = this.configuration.GetSection("Logic:NumberOfMatchers").Get<int>();
+            var matcherPeriod = TimeSpan.FromMilliseconds(this.options.MatcherWaitTime);
+            var brokerPeriod = TimeSpan.FromMilliseconds(this.options.BrokerWaitTime);
 
-            var matcherManager = new MatcherManager(companies, this.context, TimeSpan.FromSeconds(1));
-            var brokerManager = new BrokerManager(companies, this.context, "broker", TimeSpan.FromSeconds(2));
+            var matcherManager = new MatcherManager(this.options.Companies, this.context, matcherPeriod);
+            var brokerManager = new BrokerManager(this.options.Companies, this.context, "broker", brokerPeriod);
 
-            matcherManager.Start(numberOfMatchers);
-            brokerManager.Start(numberOfBrokers);
+            matcherManager.Start(this.options.NumberOfMatchers);
+            brokerManager.Start(this.options.NumberOfBrokers);
 
             this.logger.LogDebug($"cql version {this.context.GetCqlVersion()}; app started");
 
