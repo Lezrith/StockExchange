@@ -11,5 +11,7 @@ namespace ConsoleInterface
         public int NumberOfBrokers { get; set; }
         public double MatcherWaitTime { get; set; }
         public double BrokerWaitTime { get; set; }
+        public bool UseConsistencyMonitor { get; set; }
+        public double ConsistencyMonitorWaitTime { get; set; }
     }
 }

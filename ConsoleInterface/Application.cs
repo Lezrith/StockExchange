@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Data;
+using Logic;
 using Logic.Broker;
 using Logic.Matcher;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -36,8 +34,17 @@ namespace ConsoleInterface
             
             this.logger.LogInformation($"cql version {this.context.GetCqlVersion()}; app started");
 
-            matcherManager.Wait();
-            brokerManager.Wait();
+            if (this.options.UseConsistencyMonitor)
+            {
+                var monitorPeriod = TimeSpan.FromMilliseconds(this.options.ConsistencyMonitorWaitTime);
+                var monitor = new ConsistencyMonitor(this.options.Companies, this.context, this.logger, monitorPeriod);
+                monitor.Start();
+            }
+            else
+            {
+                matcherManager.Wait();
+                brokerManager.Wait();
+            }
         }
     }
 }
