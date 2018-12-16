@@ -128,8 +128,8 @@ namespace Data
                     order.StockSymbol,
                     order.OrderId);
                 query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.Quorum));
-                var set = this.mapper.Single<IEnumerable<Guid>>(query);
-                return set.Contains(matcherId) && set.Count() == 1;
+                var set = this.mapper.SingleOrDefault<IEnumerable<Guid>>(query);
+                return set != null && set.Contains(matcherId) && set.Count() == 1;
             });
         }
 
