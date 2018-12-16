@@ -33,6 +33,9 @@ namespace ConsoleInterface
 
             matcherManager.Start(numberOfMatchers);
             brokerManager.Start(numberOfBrokers);
+
+            this.logger.LogDebug($"cql version {this.context.GetCqlVersion()}; app started");
+
             matcherManager.Wait();
             brokerManager.Wait();
         }
