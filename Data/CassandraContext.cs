@@ -27,9 +27,10 @@ namespace Data
             var cluster = Cluster.Builder()
                 .AddContactPoints(options.ContactPoints)
                 .Build();
-            this.session = cluster.Connect(options.Keyspace);
+            this.session = cluster.Connect();
             this.mapper = new Mapper(this.session);
             this.ConfigureCluster();
+            this.session.ChangeKeyspace(options.Keyspace);
 
             MappingConfiguration.Global.Define<CassandraMappings>();
         }
@@ -54,7 +55,7 @@ namespace Data
                 "PricePerUnit decimal," +
                 "Date timestamp," +
                 "LockedBy set<uuid>," +
-                "PRIMARY KEY ((StockSymbol, OrderType), OrderId));");
+                "PRIMARY KEY (StockSymbol, OrderId));");
             var transactionCreate = this.session.Execute("CREATE TABLE IF NOT EXISTS stock_exchange.transactions (" +
                 "TransactionId uuid," +
                 "StockSymbol text," +
@@ -83,9 +84,9 @@ namespace Data
             this.mapper.Insert(transaction, CqlQueryOptions.New().SetConsistencyLevel(ConsistencyLevel.Any));
         }
 
-        public IEnumerable<Order> FetchOrders(string stockSymbol, OrderType orderType)
+        public IEnumerable<Order> FetchOrders(string stockSymbol)
         {
-            var query = Cql.New("SELECT * FROM orders WHERE StockSymbol = ? AND OrderType = ?", stockSymbol, orderType);
+            var query = Cql.New("SELECT * FROM orders WHERE StockSymbol = ?", stockSymbol);
             query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.One));
             return this.mapper.Fetch<Order>(query);
         }
@@ -93,22 +94,22 @@ namespace Data
         public void LockOrders(IEnumerable<Order> orders, Guid matcherId)
         {
             var statement = this.session.Prepare(
-                "UPDATE orders SET LockedBy = LockedBy + {?} WHERE StockSymbol = ? AND OrderType = ? AND OrderId = ?");
+                "UPDATE orders SET LockedBy = LockedBy + {?} WHERE StockSymbol = ? AND OrderId = ?");
             statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
             foreach (var order in orders)
             {
-                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderType, order.OrderId));
+                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderId));
             }
         }
 
         public void UnlockOrders(IEnumerable<Order> orders, Guid matcherId)
         {
             var statement = this.session.Prepare(
-                "UPDATE orders SET LockedBy = LockedBy - {?} WHERE StockSymbol = ? AND OrderType = ? AND OrderId = ?");
+                "UPDATE orders SET LockedBy = LockedBy - {?} WHERE StockSymbol = ? AND OrderId = ?");
             statement.SetConsistencyLevel(ConsistencyLevel.Quorum);
             foreach (var order in orders)
             {
-                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderType, order.OrderId));
+                this.session.Execute(statement.Bind(statement, matcherId, order.StockSymbol, order.OrderId));
             }
         }
 
@@ -117,8 +118,7 @@ namespace Data
             return orders.All(order =>
             {
                 var query = Cql.New(
-                    "SELECT LockedBy FROM orders WHERE StockSymbol = ? AND OrderType = ? AND OrderId = ?",
-                    matcherId,
+                    "SELECT LockedBy FROM orders WHERE StockSymbol = ? AND OrderId = ?",
                     order.StockSymbol,
                     order.OrderId);
                 query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.Quorum));
