@@ -36,7 +36,7 @@ namespace Logic.Matcher
 
         private void CreateTransaction(string company)
         {
-            var orders = this.context.FetchOrders(company).ToList();
+            var orders = this.context.FetchOrders(company).Where(o => !o.LockedBy.Any()).ToList();
             var purchases = orders.Where(o => o.OrderType == OrderType.Purchase);
             var sales = orders.Where(o => o.OrderType == OrderType.Sale);
             var (sale, purchase) = sales

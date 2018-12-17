@@ -74,7 +74,7 @@ namespace Data
 
         public void InsertOrder(Order order)
         {
-            this.mapper.Insert(order, CqlQueryOptions.New().SetConsistencyLevel(ConsistencyLevel.Any));
+            this.mapper.Insert(order, CqlQueryOptions.New().SetConsistencyLevel(ConsistencyLevel.Quorum));
         }
 
         public void RemoveOrder(Order order)
@@ -120,17 +120,23 @@ namespace Data
             }
         }
 
+        public class LockCheck
+        {
+            public IEnumerable<Guid> LockedBy { get; set; }
+            public Guid? SubmitterId { get; set; }
+        }
+
         public bool HasExclusiveLock(IEnumerable<Order> orders, Guid matcherId)
         {
             return orders.All(order =>
             {
                 var query = Cql.New(
-                    "SELECT LockedBy FROM orders WHERE StockSymbol = ? AND OrderId = ?",
+                    "SELECT LockedBy, SubmitterId FROM orders WHERE StockSymbol = ? AND OrderId = ?",
                     order.StockSymbol,
                     order.OrderId);
                 query.WithOptions(o => o.SetConsistencyLevel(ConsistencyLevel.Quorum));
-                var set = this.mapper.SingleOrDefault<IEnumerable<Guid>>(query);
-                return set != null && set.Contains(matcherId) && set.Count() == 1;
+                var set = this.mapper.SingleOrDefault<LockCheck>(query);
+                return set.LockedBy != null && set.SubmitterId != null && set.LockedBy.Contains(matcherId) && set.LockedBy.Count() == 1;
             });
         }
 
